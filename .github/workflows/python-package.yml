@@ -32,12 +32,12 @@ jobs:
     # https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
     - name: Install pypa/build
       run: |
-        python3 -m
+        python -m
         pip install
         build
         --user
     - name: Build a binary wheel and a source tarball
-      run: python3 -m build
+      run: python -m build
     - name: Install binary wheel and package dependencies
       run: |
         pip install dist/unitscalar-0.0.*.whl
