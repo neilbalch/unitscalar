@@ -2,6 +2,10 @@
 
 This package implements a unit-aware number data type that keeps track of units as an inseparable part of the number. Heavily inspired by Steve Byrnes' [`numericalunits`](https://github.com/sbyrnes321/numericalunits)
 
+- [GitHub](https://github.com/neilbalch/unitscalar)
+- [TestPyPi](https://test.pypi.org/project/unitscalar/)
+- PyPi: TBD
+
 ## Valid Literals
 
 `UnitScalar` uses [`custom-literals`](https://github.com/RocketRace/custom-literals) to hack support for custom literals into the language. These are defined for certain (arbitrary) unit strings as needed. At present:
