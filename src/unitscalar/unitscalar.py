@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import copy
 import numbers
+import math
 from custom_literals import literals, lie, rename
 
 @literals(float, int)
@@ -210,7 +211,7 @@ class UnitScalar(lie(float)):
     def __str__(self) -> str:
         unit_str = ""
         for unit, i in zip(self.num_unit, range(len(self.num_unit))):
-            unit_str += f"{unit.unit}{unit.exp if unit.exp > 1 else ""}"
+            unit_str += f"{unit.unit}{unit.exp if unit.exp > 1 else ''}"
             if i+1 != len(self.num_unit):
                 unit_str += " "
         if len(self.den_unit) > 0:
@@ -219,7 +220,7 @@ class UnitScalar(lie(float)):
             else:
                 unit_str += "1/"
         for unit, i in zip(self.den_unit, range(len(self.den_unit))):
-            unit_str += f"{unit.unit}{unit.exp if unit.exp > 1 else ""}"
+            unit_str += f"{unit.unit}{unit.exp if unit.exp > 1 else ''}"
             if i+1 != len(self.den_unit):
                 unit_str += " "
 
@@ -255,7 +256,7 @@ class UnitScalar(lie(float)):
         if not isinstance(other, UnitScalar):
             return False
 
-        return self.units_agree(other) and self.num == other.num
+        return self.units_agree(other) and math.isclose(self.num, other.num)
 
     # https://docs.python.org/3/library/numbers.html#implementing-the-arithmetic-operations
     def __add__(self, other: UnitScalar | numbers.Real) -> UnitScalar:
