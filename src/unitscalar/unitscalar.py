@@ -1,8 +1,11 @@
 from __future__ import annotations
 from dataclasses import dataclass
 import copy
+import numbers
+from custom_literals import literals, lie, rename
 
-class UnitScalar:
+@literals(float, int)
+class UnitScalar(lie(float)):
     VALID_UNITS = {
         # Unit (SI unit numerator, SI unit denominator, multiple)
         "m": ("m", "", 1.0),
@@ -18,9 +21,9 @@ class UnitScalar:
         "lbm": ("kg", "", 0.45359237),
         "J": ("kg m2", "s2", 1.0),
         "Wh": ("J", "", 3600.0),
-        # "mol": ("", "", 6.02214076e23),
         # Molarity is *technically* not an SI unit, but it messes with
         # FP-precision to be multiplying/dividing by 6.02214076e23
+        # "mol": ("", "", 6.02214076e23),
         "mol": ("mol", "", 1.0),
         "N": ("kg m", "s2", 1.0),
         "lbf": ("kg m", "s2", 9.80665*0.45359237),
@@ -57,7 +60,7 @@ class UnitScalar:
         exp: int
 
     @staticmethod
-    def reduce_units(num_units: list[UnitScalar.SimpleUnit], den_units: list[UnitScalar.SimpleUnit]) -> tuple[list[UnitScalar.SimpleUnit], list[UnitScalar.SimpleUnit]]:
+    def _reduce_units(num_units: list[UnitScalar.SimpleUnit], den_units: list[UnitScalar.SimpleUnit]) -> tuple[list[UnitScalar.SimpleUnit], list[UnitScalar.SimpleUnit]]:
       i=0
       while i < len(num_units):
           j=0
@@ -80,7 +83,7 @@ class UnitScalar:
 
     # Merge lists of SimpleUnit, taking care to not duplicate entries
     @staticmethod
-    def merge_lists(la: list[UnitScalar.SimpleUnit], lb: list[UnitScalar.SimpleUnit]) -> list[UnitScalar.SimpleUnit]:
+    def _merge_lists(la: list[UnitScalar.SimpleUnit], lb: list[UnitScalar.SimpleUnit]) -> list[UnitScalar.SimpleUnit]:
         out = copy.deepcopy(la)
         for x in lb:
             located = False
@@ -96,7 +99,7 @@ class UnitScalar:
     # Parse complicated unit string, e.g. "kg mm / ms2", into a list of base SI units
     # for the numerator and denominator, and a multiplication factor combining all
     # unit prefixes together
-    def parse_units(unit_str: str) -> tuple[list[UnitScalar.SimpleUnit], list[UnitScalar.SimpleUnit], float]:
+    def _parse_units(unit_str: str) -> tuple[list[UnitScalar.SimpleUnit], list[UnitScalar.SimpleUnit], float]:
         split = unit_str.split("/")
         num_str = split[0] if len(split) > 0 else ""
         den_str = split[1] if len(split) > 1 else ""
@@ -117,7 +120,6 @@ class UnitScalar:
             #   a. If so, add this to the numerator units
             #   b. If not, break this into base SI units
             # 3. Return with the aformentioned numerator and denominator units, and a multiple
-            # print("identify_unit (:) unit_str:", unit_str)
             num_units = []
             den_units = []
             mult = 1.0
@@ -153,7 +155,6 @@ class UnitScalar:
                 exp = 1
 
             # Is the unit already a single SI unit? (i.e. not composed of multiple units)
-            # print(f"\"{unit[0]}\", \"{unit[1]}\"")
             if (unit[0] == "" or unit[1] == "") and ((not " " in unit[0]) and (not " " in unit[1])):
                 if unit[1] == "":
                     num_units.append(UnitScalar.SimpleUnit(unit[0], exp))
@@ -162,17 +163,15 @@ class UnitScalar:
             # Recurse on the numerator and denominator until the unit string is a single SI unit
             else:
                 # Feed the unit back into parse_units to have it broken down into SI units
-                num_units, den_units, mult_inner = UnitScalar.parse_units(f"{unit[0]} / {unit[1]}")
+                num_units, den_units, mult_inner = UnitScalar._parse_units(f"{unit[0]} / {unit[1]}")
                 # Apply outer exponent to all inner terms
                 for unit in num_units:
                     unit.exp *= exp
                 for unit in den_units:
                     unit.exp *= exp
-                mult *= mult_inner# ** exp
+                mult *= mult_inner
 
             mult = mult ** exp
-            # print("unit_str:", unit_str, "exp:", exp, "mult:", mult)
-            # print("unit_str:", unit_str, "num_units:", num_units, "den_units:", den_units)
 
             return num_units, den_units, mult
 
@@ -186,11 +185,8 @@ class UnitScalar:
             # Lists are empty, just assign to them
             num_units, den_units, mult = identify_unit(unit_str)
             # Merge into lists
-            # print(f"parse_units (:) unit_str: \"{unit_str}\" merging")
-            # print(f"\t{num_unit_list} <== {num_units}")
-            # print(f"\t{den_unit_list} <== {den_units}")
-            num_unit_list = UnitScalar.merge_lists(num_unit_list, num_units)
-            den_unit_list = UnitScalar.merge_lists(den_unit_list, den_units)
+            num_unit_list = UnitScalar._merge_lists(num_unit_list, num_units)
+            den_unit_list = UnitScalar._merge_lists(den_unit_list, den_units)
             units_mult *= mult
 
         for unit_str in den_unit_strs:
@@ -199,61 +195,70 @@ class UnitScalar:
 
             num_units, den_units, mult = identify_unit(unit_str)
             # Merge into lists
-            # print(f"parse_units (:) unit_str: \"{unit_str}\" merging")
-            # print(f"\t{num_unit_list} <== {den_units}")
-            # print(f"\t{den_unit_list} <== {num_units}")
-            num_unit_list = UnitScalar.merge_lists(num_unit_list, den_units)
-            den_unit_list = UnitScalar.merge_lists(den_unit_list, num_units)
-            # print(f"\t==>{num_unit_list}")
-            # print(f"\t==>{den_unit_list}")
+            num_unit_list = UnitScalar._merge_lists(num_unit_list, den_units)
+            den_unit_list = UnitScalar._merge_lists(den_unit_list, num_units)
             units_mult /= mult
 
         # num_unit_list, den_unit_list = UnitScalar.reduce_units(num_unit_list, den_unit_list)
         return num_unit_list, den_unit_list, units_mult
 
-    def __init__(self, num: float, unit: str):
-        self.num_unit, self.den_unit, units_mult = UnitScalar.parse_units(unit)
-        self.num_unit, self.den_unit = UnitScalar.reduce_units(self.num_unit, self.den_unit)
+    def __init__(self, num: numbers.Real, unit: str):
+        self.num_unit, self.den_unit, units_mult = UnitScalar._parse_units(unit)
+        self.num_unit, self.den_unit = UnitScalar._reduce_units(self.num_unit, self.den_unit)
         self.num = num * units_mult
 
-    def __str__(self):
+    def __str__(self) -> str:
         unit_str = ""
-        for unit in self.num_unit:
-            unit_str += f"{unit.unit}{unit.exp if unit.exp > 1 else ""} "
+        for unit, i in zip(self.num_unit, range(len(self.num_unit))):
+            unit_str += f"{unit.unit}{unit.exp if unit.exp > 1 else ""}"
+            if i+1 != len(self.num_unit):
+                unit_str += " "
         if len(self.den_unit) > 0:
             if len(self.num_unit) > 0:
-                unit_str += "/ "
+                unit_str += "/"
             else:
-                unit_str += "1 / "
-        for unit in self.den_unit:
-            unit_str += f"{unit.unit}{unit.exp if unit.exp > 1 else ""} "
+                unit_str += "1/"
+        for unit, i in zip(self.den_unit, range(len(self.den_unit))):
+            unit_str += f"{unit.unit}{unit.exp if unit.exp > 1 else ""}"
+            if i+1 != len(self.den_unit):
+                unit_str += " "
 
         return f"{(self.num):.2f} {unit_str}" if abs(self.num) > 1e-2 else f"{(self.num):.2E} {unit_str}"
 
     # Returns in base (mKgs) units
-    def __float__(self):
+    def __float__(self) -> float:
         return self.num
 
-    def units_agree(self, other: UnitScalar) -> bool:
-        # Substitute and reduce
-        self_num_unit, self_den_unit = UnitScalar.reduce_units(self.num_unit, self.den_unit)
-        oth_num_unit, oth_den_unit = UnitScalar.reduce_units(other.num_unit, other.den_unit)
+    # Returns in base (mKgs) units
+    def __int__(self) -> int:
+        return int(self.num)
 
-        # Sort by unit string
-        self_num_sort = sorted(self_num_unit, key=lambda x: x.unit)
-        self_den_sort = sorted(self_den_unit, key=lambda x: x.unit)
-        oth_num_sort = sorted(oth_num_unit, key=lambda x: x.unit)
-        oth_den_sort = sorted(oth_den_unit, key=lambda x: x.unit)
-        return self_num_sort == oth_num_sort and self_den_sort == oth_den_sort
+    # https://stackoverflow.com/a/48709142/3339274
+    def units_agree(self, other: UnitScalar | str) -> bool:
+        if isinstance(other, UnitScalar):
+            # Substitute and reduce
+            self_num_unit, self_den_unit = UnitScalar._reduce_units(self.num_unit, self.den_unit)
+            oth_num_unit, oth_den_unit = UnitScalar._reduce_units(other.num_unit, other.den_unit)
 
-    def __eq__(self, other):
+            # Sort by unit string
+            self_num_sort = sorted(self_num_unit, key=lambda x: x.unit)
+            self_den_sort = sorted(self_den_unit, key=lambda x: x.unit)
+            oth_num_sort = sorted(oth_num_unit, key=lambda x: x.unit)
+            oth_den_sort = sorted(oth_den_unit, key=lambda x: x.unit)
+            return self_num_sort == oth_num_sort and self_den_sort == oth_den_sort
+        elif isinstance(other, str):
+            return self.units_agree(UnitScalar(0.0, other))
+        else:
+            return NotImplemented
+
+    def __eq__(self, other: UnitScalar):
         if not isinstance(other, UnitScalar):
             return False
 
         return self.units_agree(other) and self.num == other.num
 
     # https://docs.python.org/3/library/numbers.html#implementing-the-arithmetic-operations
-    def __add__(self, other) -> UnitScalar:
+    def __add__(self, other: UnitScalar | numbers.Real) -> UnitScalar:
         if isinstance(other, UnitScalar):
             if self.units_agree(other):
                 new = UnitScalar(self.num + other.num, "")
@@ -263,10 +268,22 @@ class UnitScalar:
                 return new
             else:
                 raise Exception("LHS and RHS units don't agree")
+        # https://stackoverflow.com/a/72175328/3339274
+        elif isinstance(other, numbers.Real):
+            if self.num_unit == [] and self.den_unit == []:
+                return UnitScalar(self.num + other, "")
+            elif isinstance(other, numbers.Real) and (self.num == 0 or other == 0):
+                new = UnitScalar(self.num + other, "")
+                # https://stackoverflow.com/a/17873397/3339274
+                new.num_unit = copy.deepcopy(self.num_unit)
+                new.den_unit = copy.deepcopy(self.den_unit)
+                return new
+            else:
+                raise Exception("Cannot add unitless and unitful operands")
         else:
             return NotImplemented
 
-    def __sub__(self, other) -> UnitScalar:
+    def __sub__(self, other: UnitScalar | numbers.Real) -> UnitScalar:
         if isinstance(other, UnitScalar):
             if self.units_agree(other):
                 new = UnitScalar(self.num - other.num, "")
@@ -275,30 +292,89 @@ class UnitScalar:
                 return new
             else:
                 raise Exception("LHS and RHS units don't agree")
+        elif isinstance(other, numbers.Real):
+            if self.num_unit == [] and self.den_unit == []:
+                return UnitScalar(self.num - other, "")
+            elif isinstance(other, numbers.Real) and (self.num == 0 or other == 0):
+                new = UnitScalar(self.num - other, "")
+                # https://stackoverflow.com/a/17873397/3339274
+                new.num_unit = copy.deepcopy(self.num_unit)
+                new.den_unit = copy.deepcopy(self.den_unit)
+                return new
+            else:
+                raise Exception("Cannot add unitless and unitful operands")
         else:
             return NotImplemented
 
-    def __mul__(self, other) -> UnitScalar:
+    def __rsub__(self, other: UnitScalar | numbers.Real) -> UnitScalar:
+        if isinstance(other, UnitScalar):
+            if self.units_agree(other):
+                new = UnitScalar(other.num - self.num, "")
+                new.num_unit = copy.deepcopy(self.num_unit)
+                new.den_unit = copy.deepcopy(self.den_unit)
+                return new
+            else:
+                raise Exception("LHS and RHS units don't agree")
+        elif isinstance(other, numbers.Real):
+            if self.num_unit == [] and self.den_unit == [] and self.num != 0:
+                return UnitScalar(other - self.num, "")
+            elif isinstance(other, numbers.Real) and (self.num == 0 or other == 0):
+                new = UnitScalar(other - self.num, "")
+                # https://stackoverflow.com/a/17873397/3339274
+                new.num_unit = copy.deepcopy(self.num_unit)
+                new.den_unit = copy.deepcopy(self.den_unit)
+                return new
+            else:
+                raise Exception("Cannot add unitless and unitful operands")
+        else:
+            return NotImplemented
+
+    def __mul__(self, other: UnitScalar | numbers.Real) -> UnitScalar:
         if isinstance(other, UnitScalar):
             new = UnitScalar(self.num * other.num, "")
-            new.num_unit = UnitScalar.merge_lists(self.num_unit, other.num_unit)
-            new.den_unit = UnitScalar.merge_lists(self.den_unit, other.den_unit)
-            new.num_unit, new.den_unit = UnitScalar.reduce_units(new.num_unit, new.den_unit)
+            new.num_unit = UnitScalar._merge_lists(self.num_unit, other.num_unit)
+            new.den_unit = UnitScalar._merge_lists(self.den_unit, other.den_unit)
+            new.num_unit, new.den_unit = UnitScalar._reduce_units(new.num_unit, new.den_unit)
+            return new
+        elif isinstance(other, numbers.Real):
+            new = UnitScalar(self.num * other, "")
+            new.num_unit = copy.deepcopy(self.num_unit)
+            new.den_unit = copy.deepcopy(self.den_unit)
             return new
         else:
             return NotImplemented
 
-    def __truediv__(self, other) -> UnitScalar:
+    def __truediv__(self, other: UnitScalar | numbers.Real) -> UnitScalar:
         if isinstance(other, UnitScalar):
             new = UnitScalar(self.num / other.num, "")
-            new.num_unit = UnitScalar.merge_lists(self.num_unit, other.den_unit)
-            new.den_unit = UnitScalar.merge_lists(self.den_unit, other.num_unit)
-            new.num_unit, new.den_unit = UnitScalar.reduce_units(new.num_unit, new.den_unit)
+            new.num_unit = UnitScalar._merge_lists(self.num_unit, other.den_unit)
+            new.den_unit = UnitScalar._merge_lists(self.den_unit, other.num_unit)
+            new.num_unit, new.den_unit = UnitScalar._reduce_units(new.num_unit, new.den_unit)
+            return new
+        elif isinstance(other, numbers.Real):
+            new = UnitScalar(self.num / other, "")
+            new.num_unit = copy.deepcopy(self.num_unit)
+            new.den_unit = copy.deepcopy(self.den_unit)
             return new
         else:
             return NotImplemented
 
-    def __pow__(self, power) -> UnitScalar:
+    def __rtruediv__(self, other: UnitScalar | numbers.Real) -> UnitScalar:
+        if isinstance(other, UnitScalar):
+            new = UnitScalar(other.num / self.num, "")
+            new.num_unit = UnitScalar._merge_lists(self.den_unit, other.num_unit)
+            new.den_unit = UnitScalar._merge_lists(self.num_unit, other.den_unit)
+            new.num_unit, new.den_unit = UnitScalar._reduce_units(new.num_unit, new.den_unit)
+            return new
+        elif isinstance(other, numbers.Real):
+            new = UnitScalar(other / self.num, "")
+            new.num_unit = copy.deepcopy(self.den_unit)
+            new.den_unit = copy.deepcopy(self.num_unit)
+            return new
+        else:
+            return NotImplemented
+
+    def __pow__(self, power: numbers.Integral) -> UnitScalar:
         new = UnitScalar(self.num ** power, "")
         new.num_unit = copy.deepcopy(self.num_unit)
         new.den_unit = copy.deepcopy(self.den_unit)
@@ -308,8 +384,27 @@ class UnitScalar:
             new.den_unit[i].exp *= power
         return new
 
+    # Scalar addition/multiplication is commutative
+    # https://stackoverflow.com/a/14440577/3339274
+    __radd__ = __add__
+    __rmul__ = __mul__
 
-# TODO: Use custom literals for common units
-# TODO: Implement is_eqivalent_to to compare units to a unit descriptor string
-# TODO: Implement convert_to_units for output in another format (e.g. A to uA or N to lbf)
-# TODO: Vectorized artithmetic?
+    # Custom literal constructors: https://github.com/RocketRace/custom-literals
+    @rename("x")
+    def to_unitless(self: float | int):
+        return UnitScalar(self, "")
+    @rename("gMM")
+    def to_gram_molar_mass(self: float | int):
+        return UnitScalar(self, "g/mol")
+    @rename("inch")
+    def to_inches(self: float | int):
+        return UnitScalar(self, "in")
+    # @rename("psi") # Doesn't work, for some reason?
+    def psi(self: float | int):
+        return UnitScalar(self, "psi")
+    @rename("lbf")
+    def to_psi(self: float | int):
+        return UnitScalar(self, "lbf")
+    @rename("K")
+    def to_kelvin(self: float | int):
+        return UnitScalar(self, "K")

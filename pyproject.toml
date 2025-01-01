@@ -18,6 +18,9 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering",
 ]
+dependencies = [
+  "custom_literals",
+]
 
 [project.urls]
 Homepage = "https://github.com/neilbalch/unitscalar"
