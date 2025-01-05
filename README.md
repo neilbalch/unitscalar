@@ -5,8 +5,8 @@
 This package implements a unit-aware number data type that keeps track of units as an inseparable part of the number. Heavily inspired by Steve Byrnes' [`numericalunits`](https://github.com/sbyrnes321/numericalunits)
 
 - [GitHub](https://github.com/neilbalch/unitscalar)
-- [TestPyPi](https://test.pypi.org/project/unitscalar/)
-- PyPi: TBD
+- [PyPi](https://pypi.org/project/unitscalar)
+- [TestPyPi](https://test.pypi.org/project/unitscalar)
 
 ## Valid Literals
 
@@ -31,5 +31,6 @@ Briefly quoting the [`custom-literals` README section](https://github.com/Rocket
 
 ## TODO List
 
-- Implement convert_to_units for output in another format (e.g. A to uA or N to lbf)
+- Implement `convert_to_units` for output in another format (e.g. `A` to `uA` or `N` to `lbf`)
 - Vectorized artithmetic?
+- Write example code and fill out README

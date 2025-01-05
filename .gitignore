@@ -1,3 +1,4 @@
 # Python package build
-dist/*
+dist
 __pycache__
+.pytest_cache

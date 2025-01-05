@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "ms-python.black-formatter",
+    "formulahendry.code-runner",
+    "tamasfe.even-better-toml",
+    "mhutchie.git-graph",
+    "github.vscode-github-actions",
+    "eamodio.gitlens",
+    "ms-toolsai.jupyter",
+    "ms-vscode.makefile-tools",
+    "davidanson.vscode-markdownlint",
+    "ms-python.python",
+    "gruntfuggly.todo-tree",
+  ]
+}

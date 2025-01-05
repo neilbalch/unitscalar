@@ -1,9 +1,9 @@
 from __future__ import annotations
 from dataclasses import dataclass
-import copy
-import numbers
-import math
 from custom_literals import literals, lie, rename
+import copy
+import math
+import numbers
 
 
 @literals(float, int)
@@ -56,11 +56,13 @@ class UnitScalar(lie(float)):
         "T": 1e12,  # tera
     }
 
+    # Fundamental data type stored in the num_unit, den_unit lists
     @dataclass
-    class SimpleUnit:  # Fundamental data type stored in the num_unit, den_unit lists
+    class SimpleUnit:
         unit: str  # Must be a member of UnitScalar.VALID_UNITS
         exp: int
 
+    # Simplify the unit fraction, without substitution of complex units
     @staticmethod
     def _reduce_units(
         num_units: list[UnitScalar.SimpleUnit], den_units: list[UnitScalar.SimpleUnit]
@@ -216,7 +218,7 @@ class UnitScalar(lie(float)):
         # num_unit_list, den_unit_list = UnitScalar.reduce_units(num_unit_list, den_unit_list)
         return num_unit_list, den_unit_list, units_mult
 
-    def __init__(self, num: numbers.Real, unit: str):
+    def __init__(self, num: numbers.Real, unit: str) -> None:
         self.num_unit, self.den_unit, units_mult = UnitScalar._parse_units(unit)
         self.num_unit, self.den_unit = UnitScalar._reduce_units(
             self.num_unit, self.den_unit
@@ -275,7 +277,7 @@ class UnitScalar(lie(float)):
         else:
             return NotImplemented
 
-    def __eq__(self, other: UnitScalar):
+    def __eq__(self, other: UnitScalar) -> bool:
         if not isinstance(other, UnitScalar):
             return False
 
@@ -421,25 +423,25 @@ class UnitScalar(lie(float)):
 
     # Custom literal constructors: https://github.com/RocketRace/custom-literals
     @rename("x")
-    def to_unitless(self: float | int):
+    def to_unitless(self: float | int) -> UnitScalar:
         return UnitScalar(self, "")
 
     @rename("gMM")
-    def to_gram_molar_mass(self: float | int):
+    def to_gram_molar_mass(self: float | int) -> UnitScalar:
         return UnitScalar(self, "g/mol")
 
     @rename("inch")
-    def to_inches(self: float | int):
+    def to_inches(self: float | int) -> UnitScalar:
         return UnitScalar(self, "in")
 
     # @rename("psi") # Doesn't work, for some reason?
-    def psi(self: float | int):
+    def psi(self: float | int) -> UnitScalar:
         return UnitScalar(self, "psi")
 
     @rename("lbf")
-    def to_psi(self: float | int):
+    def to_psi(self: float | int) -> UnitScalar:
         return UnitScalar(self, "lbf")
 
     @rename("K")
-    def to_kelvin(self: float | int):
+    def to_kelvin(self: float | int) -> UnitScalar:
         return UnitScalar(self, "K")
