@@ -1,6 +1,6 @@
 # https://packaging.python.org/en/latest/tutorials/packaging-projects
 build:
-	pip install build twine
+	pip install build twine flake8 pytest custom_literals forbiddenfruit
 	python3 -m build
 
 # https://stackoverflow.com/a/13245961/3339274
