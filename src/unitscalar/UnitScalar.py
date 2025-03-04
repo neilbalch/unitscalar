@@ -280,7 +280,7 @@ class UnitScalar(lie(float)):
 
     def to_units(self, target: str) -> float:
         if not self.units_agree(target):
-            return Exception("Target units not equivalent with self!")
+            raise Exception("Target units not equivalent with self!")
 
         # https://stackoverflow.com/a/431868/3339274
         return self.num / UnitScalar._parse_units(target)[2]
