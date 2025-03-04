@@ -31,6 +31,5 @@ Briefly quoting the [`custom-literals` README section](https://github.com/Rocket
 
 ## TODO List
 
-- Implement `convert_to_units` for output in another format (e.g. `A` to `uA` or `N` to `lbf`)
 - Vectorized artithmetic?
 - Write example code and fill out README

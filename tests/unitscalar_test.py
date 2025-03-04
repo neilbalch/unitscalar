@@ -129,6 +129,11 @@ class UnitScalarTest(unittest.TestCase):
         self.assertTrue(us.UnitScalar(1.0, "kg m/s2").units_agree("lbf"))
         self.assertFalse(us.UnitScalar(1.0, "kg").units_agree("lbf"))
 
+        # Verify converting to equivalent units
+        self.assertTrue(us.UnitScalar(1.0, "uA").to_units("A") == 1e-6)
+        self.assertAlmostEqual(us.UnitScalar(1.0, "lbf").to_units("N"), 4.44822162)
+        with self.assertRaises(Exception):
+            us.UnitScalar(1.0, "lbf").to_units("A")
 
 if __name__ == "__main__":
     unittest.main()

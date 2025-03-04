@@ -107,6 +107,7 @@ class UnitScalar(lie(float)):
     # Parse complicated unit string, e.g. "kg mm / ms2", into a list of base SI units
     # for the numerator and denominator, and a multiplication factor combining all
     # unit prefixes together
+    @staticmethod
     def _parse_units(
         unit_str: str,
     ) -> tuple[list[UnitScalar.SimpleUnit], list[UnitScalar.SimpleUnit], float]:
@@ -276,6 +277,13 @@ class UnitScalar(lie(float)):
             return self.units_agree(UnitScalar(0.0, other))
         else:
             return NotImplemented
+
+    def to_units(self, target: str) -> float:
+        if not self.units_agree(target):
+            return Exception("Target units not equivalent with self!")
+
+        # https://stackoverflow.com/a/431868/3339274
+        return self.num / UnitScalar._parse_units(target)[2]
 
     def __eq__(self, other: UnitScalar) -> bool:
         if not isinstance(other, UnitScalar):
