@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "unitscalar"
-version = "0.0.7"
+version = "0.0.8"
 authors = [
     { name="Neil Balch", email="neilbalch@gmail.com" },
 ]
@@ -20,6 +20,7 @@ classifiers = [
 ]
 dependencies = [
   "custom_literals",
+  "forbiddenfruit",
 ]
 
 [project.urls]
