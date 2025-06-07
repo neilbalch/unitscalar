@@ -285,6 +285,9 @@ class UnitScalar(lie(float)):
         # https://stackoverflow.com/a/431868/3339274
         return self.num / UnitScalar._parse_units(target)[2]
 
+    def fmt_in_units(self, target: str, digits: int) -> str:
+        return f"{round(self.to_units(target), digits)} {target}"
+
     def __eq__(self, other: UnitScalar) -> bool:
         if not isinstance(other, UnitScalar):
             return False

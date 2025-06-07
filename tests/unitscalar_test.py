@@ -135,5 +135,9 @@ class UnitScalarTest(unittest.TestCase):
         with self.assertRaises(Exception):
             us.UnitScalar(1.0, "lbf").to_units("A")
 
+        # Verify formatting in equivalent units
+        self.assertEqual(us.UnitScalar(3141.59, "m/s").fmt_in_units("km/s", 2), "3.14 km/s")
+        self.assertEqual(us.UnitScalar(3.14159, "kg").fmt_in_units("lbm", 3), "6.926 lbm")
+
 if __name__ == "__main__":
     unittest.main()
