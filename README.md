@@ -2,7 +2,7 @@
 
 [![Basic validation](https://github.com/neilbalch/unitscalar/actions/workflows/python-package.yml/badge.svg?branch=master)](https://github.com/neilbalch/unitscalar/actions/workflows/python-package.yml)
 
-This package implements a unit-aware number data type that keeps track of units as an inseparable part of the number. Heavily inspired by Steve Byrnes' [`numericalunits`](https://github.com/sbyrnes321/numericalunits)
+This package implements a unit-aware number data type that keeps track of units as an inseparable part of the number. Arithmetic operations strongly protect against inadvertently combining incompatible units. Heavily inspired by Steve Byrnes' [`numericalunits`](https://github.com/sbyrnes321/numericalunits)
 
 - [GitHub](https://github.com/neilbalch/unitscalar)
 - [PyPi](https://pypi.org/project/unitscalar)
