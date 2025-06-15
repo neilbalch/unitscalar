@@ -1,4 +1,3 @@
-
 from unitscalar import UnitScalar as us
 from periodictable import formulas as fm
 import math
@@ -11,7 +10,7 @@ def formula_hash(fmla: fm.Formula):
 
 
 # https://stackoverflow.com/a/4719108/3339274
-fm.Formula.__hash__ = formula_hash # type: ignore
+fm.Formula.__hash__ = formula_hash  # type: ignore
 
 ################################################################################
 #                           Define FFFg Molar Mass
@@ -24,9 +23,9 @@ if USE_CUSTOM_MIX:
     # Reference for usual black powder mix: https://chem.libretexts.org/Bookshelves/General_Chemistry/ChemPRIME_(Moore_et_al.)/03%3A_Using_Chemical_Equations_in_Calculations/3.03%3A_The_Limiting_Reagent/3.3.06%3A_Forensics-_Gunpowder_Stoichiometry
     # https://periodictable.readthedocs.io/en/latest/api/formulas.html#periodictable.formulas.Formula.mass
     COMPONENT_RATIO = {
-        fm.formula("KNO3"): 0.75, # type: ignore
-        fm.formula("S"): 0.10, # type: ignore
-        fm.formula("C"): 0.15, # type: ignore
+        fm.formula("KNO3"): 0.75,  # type: ignore
+        fm.formula("S"): 0.10,  # type: ignore
+        fm.formula("C"): 0.15,  # type: ignore
     }
 
     assert np.sum(list(COMPONENT_RATIO.values())) == 1, "Sum of ratios is not 1 (100%)"
