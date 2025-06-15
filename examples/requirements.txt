@@ -1,0 +1,4 @@
+# fffg_calculator.py
+unitscalar
+numpy
+periodictable

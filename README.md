@@ -8,6 +8,34 @@ This package implements a unit-aware number data type that keeps track of units 
 - [PyPi](https://pypi.org/project/unitscalar)
 - [TestPyPi](https://test.pypi.org/project/unitscalar)
 
+## Implemented Features
+
+- Instantiate with a floating-point number and a string representing a unit (*e.g. `"kg mm / ms2"`*)
+  - Most common SI units and some imperial/customary are supported
+  - SI unit prefixes from femto to tera
+    - `hPa` is implemented specifically because the hecto prefix is not used very often
+
+  ```python
+  >>> from unitscalar import UnitScalar as us
+  >>> list(us.UnitScalar.VALID_UNITS.keys())
+  ['m', 's', 'kg', 'C', 'K', 'in', 'L', 'Hz', 'rpm', 'g', 'lbm', 'J', 'Wh', 'mol', 'N', 'lbf', 'Pa', 'hPa', 'bar', 'atm', 'psi', 'W', 'Ah', 'A', 'V', 'ohm', 'T', 'F', 'H']
+  >>> list(us.UnitScalar.VALID_PREFIXES.keys())
+  ['f', 'p', 'n', 'u', 'm', 'k', 'M', 'G', 'T']
+  >>>
+  ```
+
+- Format as a string
+- Get raw floating point number
+- Get raw integer number (*truncated*)
+- Compare units with another `UnitScalar` object, or a unit string
+- Get raw floating point number in other (*equivalent*) units
+- Format as a string in other (*equivalent*) units
+- Fundamental algebraic operations (*operands can be `UnitScalar` or integral types*)
+  - Add / subtract
+  - Multiply / divide
+  - Raise to power (*frational powers allowed*)
+- Instantiate with custom literals (*see below*)
+
 ## Valid Literals
 
 `UnitScalar` uses [`custom-literals`](https://github.com/RocketRace/custom-literals) to hack support for custom literals into the language. These are defined for certain (arbitrary) unit strings as needed. At present:

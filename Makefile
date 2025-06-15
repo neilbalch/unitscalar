@@ -8,6 +8,9 @@ version = $(shell cat pyproject.toml | grep "version" | grep -oP '(?<=\").*(?=\"
 install: build
 	pip install --force-reinstall dist/unitscalar-$(version)-py3-none-any.whl
 
+test:
+	python3 tests/unitscalar_test.py
+
 # Use with pypi testpypi, i.e. upload-pypi or upload-testpypi
 # https://github.com/clementvidon/Makefile_tutor?tab=readme-ov-file#extra-rules
 upload-%: build
