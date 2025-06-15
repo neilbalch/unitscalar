@@ -9,8 +9,7 @@ class UnitScalarTest(unittest.TestCase):
     def tearDown(self):
         return super().tearDown()
 
-    def test_everything(self):
-        """Basic functional tests of core module functionality"""
+    def test_unit_parsing(self):
         # Trivial unit
         self.assertEqual(us.UnitScalar(3.14, "m").__str__(), "3.14 m")
         self.assertEqual(us.UnitScalar(3.14, "1/m").__str__(), "3.14 1/m")
@@ -70,6 +69,7 @@ class UnitScalarTest(unittest.TestCase):
             ),
         )
 
+    def test_unit_reduction(self):
         # Unit fraction reduction tests
         self.assertEqual(
             us.UnitScalar._reduce_units(
@@ -90,6 +90,7 @@ class UnitScalarTest(unittest.TestCase):
             ([], [us.UnitScalar.SimpleUnit("m", 1)]),
         )
 
+    def test_arithmetic(self):
         # Equality testing
         self.assertNotEqual(us.UnitScalar(3.14, "m"), us.UnitScalar(3, "m"))
         self.assertNotEqual(us.UnitScalar(3.14, "m"), us.UnitScalar(3.14, "s"))
@@ -122,6 +123,7 @@ class UnitScalarTest(unittest.TestCase):
         self.assertEqual(us.UnitScalar(2.0, "") / 3, us.UnitScalar(2 / 3, ""))
         self.assertEqual(1 / us.UnitScalar(2.0, ""), us.UnitScalar(1 / 2, ""))
 
+    def test_reformatting(self):
         # Verifying unit agreement between different units
         self.assertTrue(us.UnitScalar(1.0, "lbf").units_agree("kg m/s2"))
         self.assertTrue(us.UnitScalar(1.0, "kg m/s2").units_agree("lbf"))
