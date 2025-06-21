@@ -38,9 +38,9 @@ RECIPES: dict[str, dict[fm.Formula, float]] = {
         fm.formula("C6H10O5"): 0.04,  # type: ignore
     },
 }
-COMPONENT_RATIO =  RECIPES["FFFg"]
+COMPONENT_RATIO = RECIPES["FFFg"]
 
-global FFFg_molar_mass
+global pyro_molar_mass
 if USE_CUSTOM_MIX:
     assert np.isclose(
         np.sum(list(COMPONENT_RATIO.values())), 1
