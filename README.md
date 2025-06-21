@@ -2,7 +2,7 @@
 
 [![Basic validation](https://github.com/neilbalch/unitscalar/actions/workflows/python-package.yml/badge.svg?branch=master)](https://github.com/neilbalch/unitscalar/actions/workflows/python-package.yml)
 
-This package implements a unit-aware number data type that keeps track of units as an inseparable part of the number. Arithmetic operations strongly protect against inadvertently combining incompatible units. Heavily inspired by Steve Byrnes' [`numericalunits`](https://github.com/sbyrnes321/numericalunits)
+This package implements a unit-aware number data type that keeps track of units as an inseparable part of the number. Arithmetic operations strongly protect against inadvertently combining incompatible units. Heavily inspired by Steve Byrnes' [`numericalunits`](https://github.com/sbyrnes321/numericalunits) and Dylan Walsh's [`unitpy`](https://github.com/dylanwal/unitpy)
 
 - [GitHub](https://github.com/neilbalch/unitscalar)
 - [PyPi](https://pypi.org/project/unitscalar)
@@ -20,7 +20,7 @@ This package implements a unit-aware number data type that keeps track of units 
   >>> list(us.UnitScalar.VALID_UNITS.keys())
   ['m', 's', 'kg', 'C', 'K', 'in', 'L', 'Hz', 'rpm', 'g', 'lbm', 'J', 'Wh', 'mol', 'N', 'lbf', 'Pa', 'hPa', 'bar', 'atm', 'psi', 'W', 'Ah', 'A', 'V', 'ohm', 'T', 'F', 'H']
   >>> list(us.UnitScalar.VALID_PREFIXES.keys())
-  ['f', 'p', 'n', 'u', 'm', 'k', 'M', 'G', 'T']
+  ['f', 'p', 'n', 'u', 'm', 'c', 'k', 'M', 'G', 'T']
   >>>
   ```
 

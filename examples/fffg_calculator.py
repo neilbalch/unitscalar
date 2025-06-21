@@ -17,58 +17,74 @@ fm.Formula.__hash__ = formula_hash  # type: ignore
 ################################################################################
 
 USE_CUSTOM_MIX = True
-
-global FFFg_molar_mass
-if USE_CUSTOM_MIX:
+# https://periodictable.readthedocs.io/en/latest/api/formulas.html#periodictable.formulas.Formula.mass
+RECIPES: dict[str, dict[fm.Formula, float]] = {
     # Reference for usual black powder mix: https://chem.libretexts.org/Bookshelves/General_Chemistry/ChemPRIME_(Moore_et_al.)/03%3A_Using_Chemical_Equations_in_Calculations/3.03%3A_The_Limiting_Reagent/3.3.06%3A_Forensics-_Gunpowder_Stoichiometry
-    # https://periodictable.readthedocs.io/en/latest/api/formulas.html#periodictable.formulas.Formula.mass
-    COMPONENT_RATIO = {
+    "FFFg": {
         fm.formula("KNO3"): 0.75,  # type: ignore
         fm.formula("S"): 0.10,  # type: ignore
         fm.formula("C"): 0.15,  # type: ignore
-    }
+    },
+    # https://en.wikipedia.org/wiki/Black_powder_substitute#Types
+    "Pyrodex": {
+        fm.formula("KNO3"): 0.45,  # type: ignore
+        # Simplification of charcoal
+        fm.formula("C"): 0.09,  # type: ignore
+        fm.formula("S"): 0.06,  # type: ignore
+        fm.formula("KClO4"): 0.19,  # type: ignore
+        fm.formula("C7H5NaO2"): 0.11,  # type: ignore
+        fm.formula("C2H4N4"): 0.06,  # type: ignore
+        # Assuming only one monomer in chain
+        fm.formula("C6H10O5"): 0.04,  # type: ignore
+    },
+}
+COMPONENT_RATIO =  RECIPES["FFFg"]
 
-    assert np.sum(list(COMPONENT_RATIO.values())) == 1, "Sum of ratios is not 1 (100%)"
-    FFFg_molar_mass = 0
+global FFFg_molar_mass
+if USE_CUSTOM_MIX:
+    assert np.isclose(
+        np.sum(list(COMPONENT_RATIO.values())), 1
+    ), f"Sum of ratios is not 1 (100%), instead is {np.sum(list(COMPONENT_RATIO.values()))}"
+    pyro_molar_mass = 0
     for component, ratio in COMPONENT_RATIO.items():
-        FFFg_molar_mass += component.mass.gMM * ratio
+        pyro_molar_mass += component.mass.gMM * ratio
 else:
     # Calculated based on ratio of g predicted using mixed-unit equation (http://hararocketry.org/hara/resources/how-to-size-ejection-charge) and mol predicted using SI-unit ideal gas law
-    FFFg_molar_mass = (69.78).gMM
+    pyro_molar_mass = (69.78).gMM
 
-print(f"FFFg Molar Mass is: {FFFg_molar_mass.fmt_in_units('g/mol', 2)}")
+print(f"Pyro molar mass is: {pyro_molar_mass:0.2f;g/mol}")
 
 ################################################################################
 #                     Calculate Required FFFg Quantity
 ################################################################################
 
 # Design parameters
-chamber_id = (3.90).inch  # Chamber Internal Diameter
-chamber_length = (10.0).inch  # Chamber Length
+CHAMBER_ID = (3.90).inch  # Chamber Internal Diameter
+CHAMBER_LENGTH = (10.0).inch  # Chamber Length
 # Desired pop pressure (negating positive retention)
-pop_pressure = (10.0).psi
+POP_PRESSURE = (10.0).psi
 # Force required to break positive retention (e.g. shear bolts)
 # - https://web.archive.org/web/20131026023457/http://www.rocketmaterials.org/datastore/cord/Shear_Pins/index.php
 # - http://feretich.com/Rocketry/Resources/shearPins.html
-shear_force = (0.0).lbf
+SHEAR_FORCE = (0.0).lbf
 
 # Assumed quantities
 # http://hararocketry.org/hara/resources/how-to-size-ejection-charge
 FFFg_combustion_temp = (1837.22).K
 Rgas = us.UnitScalar(8.31446261815324, "J/K mol")
 
-bulkhead_area = math.pi * (chamber_id / 2) ** 2
-bulkhead_force = pop_pressure * shear_force
-chamber_volume = bulkhead_area * chamber_length
+bulkhead_area = math.pi * (CHAMBER_ID / 2) ** 2
+bulkhead_force = POP_PRESSURE * SHEAR_FORCE
+chamber_volume = bulkhead_area * CHAMBER_LENGTH
 
 # Based on the following mixed-unit formula: http://hararocketry.org/hara/resources/how-to-size-ejection-charge
-FFFg_mass = (
-    FFFg_molar_mass
-    * (pop_pressure + shear_force / bulkhead_area)
+pyro_mass = (
+    pyro_molar_mass
+    * (POP_PRESSURE + SHEAR_FORCE / bulkhead_area)
     * chamber_volume
     / (Rgas * FFFg_combustion_temp)
 )
 
-# print("FFFg Mass:", round(float(FFFg_mass) * 1000, 2), "g", sep=" ")
-# print(f"FFFg Mass: {FFFg_mass.to_units("g"):.2f} g")
-print(f"FFFg Mass: {FFFg_mass.fmt_in_units('g', 2)}")
+# print("Pyro Mass:", round(float(pyro_mass) * 1000, 2), "g", sep=" ")
+# print(f"Pyro Mass: {pyro_mass.to_units("g"):.2f} g")
+print(f"Pyro Mass: {pyro_mass:0.2f;g}")

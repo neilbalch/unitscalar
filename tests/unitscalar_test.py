@@ -137,10 +137,10 @@ class UnitScalarTest(unittest.TestCase):
 
         # Verify formatting in equivalent units
         self.assertEqual(
-            us.UnitScalar(3141.59, "m/s").fmt_in_units("km/s", 2), "3.14 km/s"
+            us.UnitScalar(3141.59, "m/s").__format__("0.2f;km/s"), "3.14 km/s"
         )
         self.assertEqual(
-            us.UnitScalar(3.14159, "kg").fmt_in_units("lbm", 3), "6.926 lbm"
+            us.UnitScalar(3.14159, "kg").__format__("0.3f;lbm"), "6.926 lbm"
         )
 
 

@@ -50,6 +50,7 @@ class UnitScalar(lie(float)):
         "n": 1e-9,  # nano
         "u": 1e-6,  # micro
         "m": 1e-3,  # milli
+        "c": 1e-2,  # centi (mostly just for cm)
         "k": 1e3,  # kilo
         "M": 1e6,  # mega
         "G": 1e9,  # giga
@@ -226,7 +227,8 @@ class UnitScalar(lie(float)):
         )
         self.num = num * units_mult
 
-    def __str__(self) -> str:
+    # Export units as a string
+    def units(self) -> str:
         unit_str = ""
         for unit, i in zip(self.num_unit, range(len(self.num_unit))):
             unit_str += f"{unit.unit}{unit.exp if unit.exp > 1 else ''}"
@@ -242,6 +244,10 @@ class UnitScalar(lie(float)):
             if i + 1 != len(self.den_unit):
                 unit_str += " "
 
+        return unit_str
+
+    def __str__(self) -> str:
+        unit_str = self.units()
         return (
             f"{(self.num):.2f} {unit_str}"
             if abs(self.num) > 1e-2
@@ -255,6 +261,25 @@ class UnitScalar(lie(float)):
     # Returns in base (mKgs) units
     def __int__(self) -> int:
         return int(self.num)
+
+    def to_units(self, target: str) -> float:
+        if not self.units_agree(target):
+            raise Exception("Target units not equivalent with self!")
+
+        # https://stackoverflow.com/a/431868/3339274
+        return self.num / UnitScalar._parse_units(target)[2]
+
+    # Implement format strings. Normal Python format string for floats, then an
+    # optional unit conversion term, separated by a semicolon
+    # e.g. "[NORMAL PYTHON FORMAT SPECFIER];[FORMAT UNITS]"
+    # https://docs.python.org/3/library/string.html#formatspec
+    def __format__(self, format_spec: str):
+        # return f"{format(self.v, format_spec)} {self.unit}"
+        if ";" in format_spec:
+            fmt_float, new_units = format_spec.split(";")
+            return f"{format(self.to_units(new_units), fmt_float)} {new_units}"
+        else:
+            return f"{format(self.num, format_spec)} {self.units()}"
 
     # https://stackoverflow.com/a/48709142/3339274
     def units_agree(self, other: UnitScalar | str) -> bool:
@@ -277,16 +302,6 @@ class UnitScalar(lie(float)):
             return self.units_agree(UnitScalar(0.0, other))
         else:
             return NotImplemented
-
-    def to_units(self, target: str) -> float:
-        if not self.units_agree(target):
-            raise Exception("Target units not equivalent with self!")
-
-        # https://stackoverflow.com/a/431868/3339274
-        return self.num / UnitScalar._parse_units(target)[2]
-
-    def fmt_in_units(self, target: str, digits: int) -> str:
-        return f"{round(self.to_units(target), digits)} {target}"
 
     def __eq__(self, other: UnitScalar) -> bool:
         if not isinstance(other, UnitScalar):
