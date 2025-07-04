@@ -59,5 +59,4 @@ Briefly quoting the [`custom-literals` README section](https://github.com/Rocket
 
 ## TODO List
 
-- Vectorized artithmetic?
 - Write example code and fill out README

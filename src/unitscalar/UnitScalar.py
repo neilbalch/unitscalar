@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from custom_literals import literals, lie, rename
 import copy
 import math
-import numbers
+import numbers as nums
+import numpy as np
 
 
 @literals(float, int)
@@ -220,7 +221,7 @@ class UnitScalar(lie(float)):
         # num_unit_list, den_unit_list = UnitScalar.reduce_units(num_unit_list, den_unit_list)
         return num_unit_list, den_unit_list, units_mult
 
-    def __init__(self, num: numbers.Real, unit: str) -> None:
+    def __init__(self, num: nums.Real | np.ndarray, unit: str) -> None:
         self.num_unit, self.den_unit, units_mult = UnitScalar._parse_units(unit)
         self.num_unit, self.den_unit = UnitScalar._reduce_units(
             self.num_unit, self.den_unit
@@ -255,7 +256,7 @@ class UnitScalar(lie(float)):
         )
 
     # Returns in base (mKgs) units
-    def __float__(self) -> float:
+    def __float__(self) -> float | np.ndarray:
         return self.num
 
     # Returns in base (mKgs) units
@@ -273,7 +274,7 @@ class UnitScalar(lie(float)):
     # optional unit conversion term, separated by a semicolon
     # e.g. "[NORMAL PYTHON FORMAT SPECFIER];[FORMAT UNITS]"
     # https://docs.python.org/3/library/string.html#formatspec
-    def __format__(self, format_spec: str):
+    def __format__(self, format_spec: str) -> str:
         # return f"{format(self.v, format_spec)} {self.unit}"
         if ";" in format_spec:
             fmt_float, new_units = format_spec.split(";")
@@ -307,10 +308,15 @@ class UnitScalar(lie(float)):
         if not isinstance(other, UnitScalar):
             return False
 
-        return self.units_agree(other) and math.isclose(self.num, other.num)
+        if isinstance(self.num, np.ndarray):
+            a = self.units_agree(other)
+            b = bool(np.isclose(self.num, other.num).all())
+            return a and b
+        else:
+            return self.units_agree(other) and math.isclose(self.num, other.num)
 
     # https://docs.python.org/3/library/numbers.html#implementing-the-arithmetic-operations
-    def __add__(self, other: UnitScalar | numbers.Real) -> UnitScalar:
+    def __add__(self, other: UnitScalar | nums.Real | np.ndarray) -> UnitScalar:
         if isinstance(other, UnitScalar):
             if self.units_agree(other):
                 new = UnitScalar(self.num + other.num, "")
@@ -321,10 +327,10 @@ class UnitScalar(lie(float)):
             else:
                 raise Exception("LHS and RHS units don't agree")
         # https://stackoverflow.com/a/72175328/3339274
-        elif isinstance(other, numbers.Real):
+        elif isinstance(other, nums.Real) or isinstance(other, np.ndarray):
             if self.num_unit == [] and self.den_unit == []:
                 return UnitScalar(self.num + other, "")
-            elif isinstance(other, numbers.Real) and (self.num == 0 or other == 0):
+            elif self.num == 0 or other == 0:
                 new = UnitScalar(self.num + other, "")
                 # https://stackoverflow.com/a/17873397/3339274
                 new.num_unit = copy.deepcopy(self.num_unit)
@@ -335,7 +341,7 @@ class UnitScalar(lie(float)):
         else:
             return NotImplemented
 
-    def __sub__(self, other: UnitScalar | numbers.Real) -> UnitScalar:
+    def __sub__(self, other: UnitScalar | nums.Real | np.ndarray) -> UnitScalar:
         if isinstance(other, UnitScalar):
             if self.units_agree(other):
                 new = UnitScalar(self.num - other.num, "")
@@ -344,21 +350,21 @@ class UnitScalar(lie(float)):
                 return new
             else:
                 raise Exception("LHS and RHS units don't agree")
-        elif isinstance(other, numbers.Real):
+        elif isinstance(other, nums.Real) or isinstance(other, np.ndarray):
             if self.num_unit == [] and self.den_unit == []:
                 return UnitScalar(self.num - other, "")
-            elif isinstance(other, numbers.Real) and (self.num == 0 or other == 0):
+            elif self.num == 0 or other == 0:
                 new = UnitScalar(self.num - other, "")
                 # https://stackoverflow.com/a/17873397/3339274
                 new.num_unit = copy.deepcopy(self.num_unit)
                 new.den_unit = copy.deepcopy(self.den_unit)
                 return new
             else:
-                raise Exception("Cannot add unitless and unitful operands")
+                raise Exception("Cannot subtract unitless and unitful operands")
         else:
             return NotImplemented
 
-    def __rsub__(self, other: UnitScalar | numbers.Real) -> UnitScalar:
+    def __rsub__(self, other: UnitScalar | nums.Real | np.ndarray) -> UnitScalar:
         if isinstance(other, UnitScalar):
             if self.units_agree(other):
                 new = UnitScalar(other.num - self.num, "")
@@ -367,21 +373,21 @@ class UnitScalar(lie(float)):
                 return new
             else:
                 raise Exception("LHS and RHS units don't agree")
-        elif isinstance(other, numbers.Real):
+        elif isinstance(other, nums.Real) or isinstance(other, np.ndarray):
             if self.num_unit == [] and self.den_unit == [] and self.num != 0:
                 return UnitScalar(other - self.num, "")
-            elif isinstance(other, numbers.Real) and (self.num == 0 or other == 0):
+            elif self.num == 0 or other == 0:
                 new = UnitScalar(other - self.num, "")
                 # https://stackoverflow.com/a/17873397/3339274
                 new.num_unit = copy.deepcopy(self.num_unit)
                 new.den_unit = copy.deepcopy(self.den_unit)
                 return new
             else:
-                raise Exception("Cannot add unitless and unitful operands")
+                raise Exception("Cannot subtract unitless and unitful operands")
         else:
             return NotImplemented
 
-    def __mul__(self, other: UnitScalar | numbers.Real) -> UnitScalar:
+    def __mul__(self, other: UnitScalar | nums.Real | np.ndarray) -> UnitScalar:
         if isinstance(other, UnitScalar):
             new = UnitScalar(self.num * other.num, "")
             new.num_unit = UnitScalar._merge_lists(self.num_unit, other.num_unit)
@@ -390,7 +396,7 @@ class UnitScalar(lie(float)):
                 new.num_unit, new.den_unit
             )
             return new
-        elif isinstance(other, numbers.Real):
+        elif isinstance(other, nums.Real) or isinstance(other, np.ndarray):
             new = UnitScalar(self.num * other, "")
             new.num_unit = copy.deepcopy(self.num_unit)
             new.den_unit = copy.deepcopy(self.den_unit)
@@ -398,7 +404,7 @@ class UnitScalar(lie(float)):
         else:
             return NotImplemented
 
-    def __truediv__(self, other: UnitScalar | numbers.Real) -> UnitScalar:
+    def __truediv__(self, other: UnitScalar | nums.Real | np.ndarray) -> UnitScalar:
         if isinstance(other, UnitScalar):
             new = UnitScalar(self.num / other.num, "")
             new.num_unit = UnitScalar._merge_lists(self.num_unit, other.den_unit)
@@ -407,7 +413,7 @@ class UnitScalar(lie(float)):
                 new.num_unit, new.den_unit
             )
             return new
-        elif isinstance(other, numbers.Real):
+        elif isinstance(other, nums.Real) or isinstance(other, np.ndarray):
             new = UnitScalar(self.num / other, "")
             new.num_unit = copy.deepcopy(self.num_unit)
             new.den_unit = copy.deepcopy(self.den_unit)
@@ -415,7 +421,7 @@ class UnitScalar(lie(float)):
         else:
             return NotImplemented
 
-    def __rtruediv__(self, other: UnitScalar | numbers.Real) -> UnitScalar:
+    def __rtruediv__(self, other: UnitScalar | nums.Real | np.ndarray) -> UnitScalar:
         if isinstance(other, UnitScalar):
             new = UnitScalar(other.num / self.num, "")
             new.num_unit = UnitScalar._merge_lists(self.den_unit, other.num_unit)
@@ -424,7 +430,7 @@ class UnitScalar(lie(float)):
                 new.num_unit, new.den_unit
             )
             return new
-        elif isinstance(other, numbers.Real):
+        elif isinstance(other, nums.Real) or isinstance(other, np.ndarray):
             new = UnitScalar(other / self.num, "")
             new.num_unit = copy.deepcopy(self.den_unit)
             new.den_unit = copy.deepcopy(self.num_unit)
@@ -432,7 +438,7 @@ class UnitScalar(lie(float)):
         else:
             return NotImplemented
 
-    def __pow__(self, power: numbers.Integral) -> UnitScalar:
+    def __pow__(self, power: nums.Integral) -> UnitScalar:
         new = UnitScalar(self.num**power, "")
         new.num_unit = copy.deepcopy(self.num_unit)
         new.den_unit = copy.deepcopy(self.den_unit)

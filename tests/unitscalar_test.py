@@ -1,5 +1,6 @@
-import unittest
 from unitscalar import UnitScalar as us
+import numpy as np
+import unittest
 
 
 class UnitScalarTest(unittest.TestCase):
@@ -90,7 +91,7 @@ class UnitScalarTest(unittest.TestCase):
             ([], [us.UnitScalar.SimpleUnit("m", 1)]),
         )
 
-    def test_arithmetic(self):
+    def test_scalar_arithmetic(self):
         # Equality testing
         self.assertNotEqual(us.UnitScalar(3.14, "m"), us.UnitScalar(3, "m"))
         self.assertNotEqual(us.UnitScalar(3.14, "m"), us.UnitScalar(3.14, "s"))
@@ -122,6 +123,38 @@ class UnitScalarTest(unittest.TestCase):
         self.assertEqual(1 + us.UnitScalar(2.0, ""), us.UnitScalar(3, ""))
         self.assertEqual(us.UnitScalar(2.0, "") / 3, us.UnitScalar(2 / 3, ""))
         self.assertEqual(1 / us.UnitScalar(2.0, ""), us.UnitScalar(1 / 2, ""))
+
+    def test_vector_arithmetic(self):
+        a = np.array([[1, 2], [3, 4]])
+        b = np.array([[3, 4], [5, 6]])
+
+        # Equality testing
+        self.assertNotEqual(us.UnitScalar(a, "m"), us.UnitScalar(b, "m"))
+        self.assertNotEqual(us.UnitScalar(a, "m"), us.UnitScalar(a, "s"))
+        self.assertEqual(us.UnitScalar(a, "m s"), us.UnitScalar(a, "s m"))
+
+        # Basic arithmetic checkouts
+        self.assertEqual(
+            us.UnitScalar(a, "m") + us.UnitScalar(a, "m"),
+            us.UnitScalar(2 * a, "m"),
+        )
+        self.assertEqual(
+            us.UnitScalar(a, "m") - us.UnitScalar(b, "m"), us.UnitScalar(a - b, "m")
+        )
+        self.assertEqual(
+            us.UnitScalar(a, "m/s") * us.UnitScalar(a, "1/s"),
+            us.UnitScalar(a**2, "m/s2"),
+        )
+        self.assertEqual(
+            us.UnitScalar(a, "m/s") / us.UnitScalar(b, "1/s"),
+            us.UnitScalar(a / b, "m"),
+        )
+        self.assertEqual(us.UnitScalar(a, "m/s") ** 2, us.UnitScalar(a**2, "m2/s2"))
+        self.assertEqual(us.UnitScalar(a, "m/s2") ** 3, us.UnitScalar(a**3, "m3/s6"))
+        self.assertEqual(us.UnitScalar(a, "") + 1, us.UnitScalar(a + 1, ""))
+        self.assertEqual(1 + us.UnitScalar(b, ""), us.UnitScalar(b + 1, ""))
+        self.assertEqual(us.UnitScalar(a, "") / 3, us.UnitScalar(a / 3, ""))
+        self.assertEqual(1 / us.UnitScalar(a, ""), us.UnitScalar(1 / a, ""))
 
     def test_reformatting(self):
         # Verifying unit agreement between different units
