@@ -21,6 +21,7 @@ classifiers = [
 dependencies = [
   "custom_literals",
   "forbiddenfruit",
+  "numpy",
 ]
 
 [project.urls]
